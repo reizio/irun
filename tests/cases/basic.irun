@@ -1,0 +1,21 @@
+# case: call, no args
+foo()
+
+# case: call, with one pos arg
+foo(1)
+
+# case: call, with any pos args
+foo(***)
+
+# case: call, with one key arg
+foo(key=value)
+
+# case: call, with one anon key arg
+foo(...=value)
+
+# case: call, with one named key arg - no value
+foo(key=...)
+
+# case: call, mixed args
+foo(1, 2, foo=3, bar=4)
+

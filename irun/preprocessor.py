@@ -42,11 +42,12 @@ def register_tokens(token_dict):
     )
 
 
-register_tokens({"DOLLAR": "$"})
+register_tokens({"TRIPLE_STAR": "***", "DOLLAR": "$"})
 
 # 1-to-1 token translations
 TRANSLATION_SCHEMA = {
     token.ELLIPSIS: (token.NAME, Matchers.MATCH_ONE),
+    token.TRIPLE_STAR: (token.NAME, Matchers.MATCH_ANY),
 }
 
 

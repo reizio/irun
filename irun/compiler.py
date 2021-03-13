@@ -87,11 +87,11 @@ def compile_node(node):
     return context
 
 
-@compile_node.register(ast.IgnoreAny)
+@compile_node.register(ast.IgnoreOne)
 def compile_ignore_any(node):
     return AnyMatcher()
 
 
-@compile_node.register(ast.IgnoreAll)
+@compile_node.register(ast.IgnoreAny)
 def compile_ignore_all(node):
     return AllMatcher()

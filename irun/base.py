@@ -11,6 +11,10 @@ class Matchers(str, Enum):
     # e.g: foo(...) => foo(MATCH_ONE)
     MATCH_ONE = "__match_one"
 
+    # all matcher: ***
+    # e.g: foo(***) => foo(MATCH_ANY)
+    MATCH_ANY = "__match_any"
+
     # name matcher: $<identifier>
     # e.g: $foo => MATCH_NAME_foo
     MATCH_NAME = "__match_name"

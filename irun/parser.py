@@ -13,11 +13,11 @@ class singleton(ast.AST):
     _attributes = ("lineno", "col_offset", "end_lineno", "end_col_offset")
 
 
-class IgnoreAny(singleton):
+class IgnoreOne(singleton):
     ...
 
 
-class IgnoreAll(singleton):
+class IgnoreAny(singleton):
     ...
 
 
@@ -25,8 +25,8 @@ class Reference(ast.expr):
     _fields = ("id",)
 
 
+ast.IgnoreOne = IgnoreOne
 ast.IgnoreAny = IgnoreAny
-ast.IgnoreAll = IgnoreAll
 ast.Reference = Reference
 
 
@@ -42,6 +42,8 @@ def compose_transformers(*partials):
 
 def maybe_reference(name, flows_from):
     if Matchers.MATCH_ONE.can_match(name):
+        node = IgnoreOne()
+    elif Matchers.MATCH_ANY.can_match(name):
         node = IgnoreAny()
     elif Matchers.MATCH_NAME.can_match(name):
         node = Reference(Matchers.load_name_match(name))
