@@ -8,13 +8,26 @@ from irun.preprocessor import transpile
 DEFINITION_TYPES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
 
 
-class Ignore(ast.AST):
+class singleton(ast.AST):
     _fields = ()
     _attributes = ("lineno", "col_offset", "end_lineno", "end_col_offset")
 
 
+class IgnoreAny(singleton):
+    ...
+
+
+class IgnoreAll(singleton):
+    ...
+
+
 class Reference(ast.expr):
     _fields = ("id",)
+
+
+ast.IgnoreAny = IgnoreAny
+ast.IgnoreAll = IgnoreAll
+ast.Reference = Reference
 
 
 def compose_transformers(*partials):
@@ -29,7 +42,7 @@ def compose_transformers(*partials):
 
 def maybe_reference(name, flows_from):
     if Matchers.MATCH_ONE.can_match(name):
-        node = Ignore()
+        node = IgnoreAny()
     elif Matchers.MATCH_NAME.can_match(name):
         node = Reference(Matchers.load_name_match(name))
     else:
@@ -72,8 +85,12 @@ class ASTRestructurer(ast.NodeTransformer):
 def parse(source):
     source = transpile(source)
     tree = ast.parse(source)
+
+    assert len(tree.body) == 1
+    [node] = tree.body
+
     restructurer = ASTRestructurer()
-    return restructurer.visit(tree)
+    return restructurer.visit(node)
 
 
 def main(argv=None):
