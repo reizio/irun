@@ -3,6 +3,8 @@
 A human-friendly query language (python-like DSL) for generating
 [Reiz QL](https://github.com/reizio/reiz.io/blob/master/docs/reizql.md) queries.
 
+## Example
+
 ```py
 with open(...) as $stream:
     tree = ast.parse($stream.read())
