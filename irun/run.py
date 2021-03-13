@@ -1,29 +1,30 @@
-import ast
-from argparse import ArgumentParser, FileType
+from argparse import ArgumentParser
 
 from irun.compiler import compile_node, construct
-from irun.preprocessor import transpile
+from irun.parser import parse
 
 
 def compile_irun(source):
-    sanitized_source = transpile(source)
-
-    tree = ast.parse(sanitized_source)
-    if len(tree.body) == 1:
-        tree = tree.body[0]
-
-    reiz_node = compile_node(tree)
-    return reiz_node
+    tree = parse(source)
+    rql_context = compile_node(tree)
+    return construct(rql_context)
 
 
 def main(argv=None):
     parser = ArgumentParser()
-    parser.add_argument("source", type=FileType())
+    parser.add_argument("-c", "--cli", help="input from command line")
+    parser.add_argument("-f", "--file", help="input from file")
 
     options = parser.parse_args(argv)
-    with options.source as stream:
-        reiz_node = compile_irun(stream.read())
-    print(construct(reiz_node))
+    if options.cli:
+        source = options.cli
+    elif options.file:
+        with open(options.file) as stream:
+            source = stream.read()
+    else:
+        raise ValueError("run.py expects either -c/--cli or -f/--file to operate")
+
+    print(compile_irun(source))
 
 
 if __name__ == "__main__":

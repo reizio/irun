@@ -1,218 +1,97 @@
-import ast
 from dataclasses import dataclass, field
 from functools import singledispatch
-from typing import Any, Dict, List
+from typing import Any, Dict
 
-from irun.base import Matchers
+from irun.parser import ast
 
 
-def construct(value):
-    if isinstance(value, _ReizObject):
-        return value.construct()
-    elif isinstance(value, list):
-        return "[" + ", ".join(construct(item) for item in value) + "]"
+def construct(node):
+    if isinstance(node, Matcher):
+        return node.construct()
     else:
-        return repr(value)
+        return node
 
 
-class _ReizObject:
-    def kv_view(self, items):
-        for key, value in items:
-            yield f"{key}={construct(value)}"
+class Matcher:
+    ...
+
+
+class AnyMatcher(Matcher):
+    def construct(self):
+        return "..."
+
+
+class AllMatcher(Matcher):
+    def construct(self):
+        return "*..."
 
 
 @dataclass
-class ReizNode(_ReizObject):
-    matcher: str
-    fields: Dict[str, Any] = field(default_factory=dict)
+class ValueMatcher(Matcher):
+    value: Any
+
+
+class SequenceMatcher(ValueMatcher):
+    def construct(self, flows_from=None):
+        assert isinstance(self.value, list)
+        source = "["
+        source += ", ".join(construct(item) for item in self.value)
+        source += "]"
+        return source
+
+
+class LiteralMatcher(ValueMatcher):
+    def construct(self, flows_from=None):
+        return repr(self.value)
+
+
+@dataclass
+class Context(ValueMatcher):
+    fields: Dict[str, Matcher] = field(default_factory=dict)
 
     @classmethod
-    def from_ast(cls, node):
-        return cls(type(node).__name__)
+    def from_node(cls, node):
+        context = cls(type(node).__name__)
+        for field, value in ast.iter_fields(node):
+            context.describe(field, value)
+        return context
 
-    def add_field(self, field, value):
-        if value:
-            self.fields[field] = value
+    def describe(self, field, value):
+        if value is None:
+            return None
 
-    def compile_list(self, field, nodes):
-        self.add_field(field, compile_list(nodes))
+        matcher = None
+        if isinstance(value, list):
+            matcher = SequenceMatcher([compile_node(node) for node in value])
+        elif isinstance(value, (str, int)):
+            matcher = LiteralMatcher(value)
+        elif isinstance(value, ast.AST):
+            matcher = compile_node(value)
 
-    def compile_field(self, field, node):
-        if node is not None:
-            self.add_field(field, compile_node(node))
-
-    def construct(self):
-        source = self.matcher
-        source += "("
-        source += ", ".join(self.kv_view(self.fields.items()))
-        source += ")"
-        return source
-
-
-@dataclass
-class ReizCall(_ReizObject):
-    func: str
-    pos_args: List[Any] = field(default_factory=list)
-    key_args: Dict[str, Any] = field(default_factory=dict)
-
-    def __init__(self, func, *pos_args, **key_args):
-        self.func = func
-        self.pos_args = list(pos_args)
-        self.key_args = key_args
+        if matcher is not None:
+            self.fields[field] = matcher
 
     def construct(self):
-        source = self.func
+        source = self.value
         source += "("
-        source += ", ".join(self.pos_args + list(self.kv_view(self.key_args.items())))
+        source += ", ".join(
+            f"{key}={construct(value)}" for key, value in self.fields.items()
+        )
         source += ")"
         return source
-
-
-def compile_list(nodes):
-    return [compile_node(node) for node in nodes]
-
-
-def body_exists(items):
-    return not (
-        len(items) == 1
-        and isinstance(expr := items[0], ast.Expr)
-        and isinstance(name := expr.value, ast.Name)
-        and name.id == Matchers.MATCH_ANY
-    )
-
-
-def if_exists(reiz_node):
-    if reiz_node.fields:
-        return reiz_node
-    else:
-        return None
 
 
 @singledispatch
 def compile_node(node):
-    raise ValueError(f"Unsupported node: {type(node).__name__}")
+    context = Context.from_node(node)
+    return context
 
 
-@compile_node.register(ast.FunctionDef)
-def compile_function(node):
-    # FunctionDef(identifier name, arguments args,
-    #             stmt* body, expr* decorator_list, expr? returns,
-    #             string? type_comment)
-    reiz_node = ReizNode.from_ast(node)
-
-    # identifier name
-    if node.name != Matchers.MATCH_ONE:
-        reiz_node.add_field("name", node.name)
-
-    # arguments args
-    reiz_node.compile_field("args", node.args)
-
-    # stmt* body
-    if body_exists(node.body):
-        reiz_node.add_field("body", compile_list(node.body))
-
-    # expr* decorator_list
-    reiz_node.compile_list("decorator_list", node.decorator_list)
-
-    # expr? returns
-    reiz_node.compile_field("returns", node.returns)
-
-    # string? type_comment
-    reiz_node.compile_field("type_comment", node.type_comment)
-    return reiz_node
+@compile_node.register(ast.IgnoreOne)
+def compile_ignore_any(node):
+    return AnyMatcher()
 
 
-@compile_node.register(ast.arguments)
-def compile_arguments(node):
-    # (arg* posonlyargs, arg* args, arg? vararg, arg* kwonlyargs,
-    #  expr* kw_defaults, arg? kwarg, expr* defaults)
-    reiz_node = ReizNode.from_ast(node)
-
-    # arg* posonlyargs
-    reiz_node.compile_list("posonlyargs", node.posonlyargs)
-
-    # arg* args
-    reiz_node.compile_list("args", node.args)
-
-    # arg? vararg
-    reiz_node.compile_field("vararg", node.vararg)
-
-    # arg* kwonlyargs
-    reiz_node.compile_list("kwonlyargs", node.kwonlyargs)
-
-    # arg* kw_defaults
-    reiz_node.compile_list("kw_defaults", node.kw_defaults)
-
-    # arg? kwarg
-    reiz_node.compile_field("kwarg", node.kwarg)
-
-    # arg* defaults
-    reiz_node.compile_list("defaults", node.defaults)
-
-    return if_exists(reiz_node)
-
-
-@compile_node.register(ast.For)
-def compile_for(node):
-    # For(expr target, expr iter, stmt* body, stmt* orelse,
-    #     string? type_comment)
-    reiz_node = ReizNode.from_ast(node)
-
-    # expr target
-    reiz_node.compile_field("target", node.target)
-
-    # expr iter
-    reiz_node.compile_field("iter", node.iter)
-
-    # stmt* body
-    if body_exists(node.body):
-        reiz_node.compile_list("body", node.body)
-
-    # stmt* orelse
-    if body_exists(node.orelse):
-        reiz_node.compile_list("orelse", node.orelse)
-    else:
-        reiz_node.add_field("orelse", ReizCall("LEN", min=1))
-
-    # string? type_comment
-    reiz_node.compile_field("type_comment", node.type_comment)
-    return reiz_node
-
-
-@compile_node.register(ast.Name)
-def compile_name(node):
-    # Name(identifier id, expr_context ctx)
-    reiz_node = ReizNode.from_ast(node)
-
-    # identifier id
-    if node.id != Matchers.MATCH_ONE:
-        reiz_node.add_field("id", node.id)
-
-    return if_exists(reiz_node)
-
-
-@compile_node.register(ast.Call)
-def compile_call(node):
-    # Call(expr func, expr* args, keyword* keywords)
-    reiz_node = ReizNode.from_ast(node)
-
-    # expr func
-    reiz_node.compile_field("func", node.func)
-
-    # expr* args
-    reiz_node.compile_list("args", node.args)
-
-    # keyword* keywords
-    reiz_node.compile_list("keywords", node.keywords)
-    return reiz_node
-
-
-@compile_node.register(ast.Expr)
-def compile_expr(node):
-    # Expr(expr value)
-    reiz_node = ReizNode.from_ast(node)
-
-    # expr value
-    reiz_node.compile_field("value", node.value)
-
-    return reiz_node
+@compile_node.register(ast.IgnoreAny)
+def compile_ignore_all(node):
+    return AllMatcher()
