@@ -57,8 +57,8 @@ class ASTRestructurer(ast.NodeTransformer):
     def add_definition(self, node, field):
         identifier = getattr(node, field)
         if identifier is not None:
-            identifier = maybe_reference(identifier, node)
-            setattr(node, field, identifier)
+            if reference := maybe_reference(identifier, node):
+                setattr(node, field, reference)
         self.generic_visit(node)
         return node
 

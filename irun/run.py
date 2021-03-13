@@ -7,7 +7,7 @@ from irun.parser import parse
 def compile_irun(source):
     tree = parse(source)
     rql_context = compile_node(tree)
-    return rql_context
+    return construct(rql_context)
 
 
 def main(argv=None):
@@ -24,8 +24,7 @@ def main(argv=None):
     else:
         raise ValueError("run.py expects either -c/--cli or -f/--file to operate")
 
-    rql_context = compile_irun(source)
-    print(construct(rql_context))
+    print(compile_irun(source))
 
 
 if __name__ == "__main__":
