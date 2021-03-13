@@ -87,6 +87,19 @@ def compile_node(node):
     return context
 
 
+@compile_node.register(ast.expr)
+def compile_expr(node):
+    context = Context.from_node(node)
+
+    # ctx is more about semantics than the structure
+    # of the source code. For nodes like Name/Attribute
+    # we will clear this field in order to match all
+    # similiar structures.
+    context.fields.pop("ctx", None)
+
+    return context
+
+
 @compile_node.register(ast.IgnoreOne)
 def compile_ignore_any(node):
     return AnyMatcher()
