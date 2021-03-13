@@ -42,12 +42,11 @@ def register_tokens(token_dict):
     )
 
 
-register_tokens({"DOLLAR": "$", "TRIPLESTAR": "***"})
+register_tokens({"DOLLAR": "$"})
 
-BOUND_NAME_PREFIX = "__bound_name"
+# 1-to-1 token translations
 TRANSLATION_SCHEMA = {
     token.ELLIPSIS: (token.NAME, Matchers.MATCH_ONE),
-    token.TRIPLESTAR: (token.NAME, Matchers.MATCH_ANY),
 }
 
 
@@ -60,7 +59,7 @@ def _transpile_tokens(original_tokens):
         if special_identifier := TRANSLATION_SCHEMA.get(current_token.exact_type):
             new_tokens.append(special_identifier)
         elif current_token.exact_type == token.DOLLAR:
-            # This should always be token.ENDMARKER, but just incase
+            # This should always be ENDMARKER, but just in case
             if cursor + 1 == len(original_tokens):
                 raise PreprocessError("EOF", *current_token.start, *current_token.end)
 

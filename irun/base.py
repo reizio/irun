@@ -7,18 +7,16 @@ class IRunException(Exception):
 
 class Matchers(str, Enum):
 
+    # any matcher: ...
+    # e.g: foo(...) => foo(MATCH_ONE)
     MATCH_ONE = "__match_one"
-    MATCH_ANY = "__match_any"
 
-    # name matcher: __bound_name_$name
-    # e.g: $foo => __bound_name_foo
-    #      $_bar => __bound_name__bar
+    # name matcher: $<identifier>
+    # e.g: $foo => MATCH_NAME_foo
+    MATCH_NAME = "__match_name"
 
-    _MATCH_NAME = "__match_name"
-
-    @staticmethod
-    def is_name_match(name):
-        return name.startswith(self._MATCH_NAME)
+    def can_match(self, name):
+        return name.startswith(self)
 
     @staticmethod
     def load_name_match(name):
