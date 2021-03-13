@@ -1,28 +1,7 @@
 # IRUN: Indulgent Reiz User Notation
 
-A user-friendly query language, that transpiles
-to ReizQL.
-
-
-Write python-like DSL, get ReizQL version for free!
-```py
-def ...():
-    for _ in range():
-        ***
-```
-
-```py
-FunctionDef(
-    body=[
-        For(
-            target=Name(id="_"),
-            iter=Call(
-                func=Name(id="range")
-            ),
-        )
-    ]
-)
-```
+A human-friendly query language (python-like DSL) for generating
+[Reiz QL](https://github.com/reizio/reiz.io/blob/master/docs/reizql.md) queries.
 
 
 
