@@ -22,13 +22,11 @@ class Matchers(str, Enum):
     def can_match(self, name):
         return name.startswith(self)
 
-    @staticmethod
-    def load_name_match(name):
-        assert self.is_name_match(name)
-        name = name[len(self._MATCH_NAME) :]
+    def load(self, name):
+        assert self.can_match(name)
+        name = name[len(self) :]
         assert name[0] == "_"
         return name[1:]
 
-    @staticmethod
-    def store_name_match(name):
-        return self._MATCH_NAME + "_" + name
+    def store(self, name):
+        return self + "_" + name

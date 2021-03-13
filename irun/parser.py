@@ -46,7 +46,7 @@ def maybe_reference(name, flows_from):
     elif Matchers.MATCH_ANY.can_match(name):
         node = IgnoreAny()
     elif Matchers.MATCH_NAME.can_match(name):
-        node = Reference(Matchers.load_name_match(name))
+        node = Reference(Matchers.MATCH_NAME.load(name))
     else:
         return None
 

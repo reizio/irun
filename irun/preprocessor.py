@@ -73,7 +73,7 @@ def _transpile_tokens(original_tokens):
                 )
 
             next_token = next_token._replace(
-                string=Matchers.store_name_match(next_token.string)
+                string=Matchers.MATCH_NAME.store(next_token.string)
             )
             new_tokens.append(next_token)
             cursor += 1

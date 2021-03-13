@@ -32,7 +32,7 @@ class ValueMatcher(Matcher):
 
 
 class SequenceMatcher(ValueMatcher):
-    def construct(self, flows_from=None):
+    def construct(self):
         assert isinstance(self.value, list)
         source = "["
         source += ", ".join(construct(item) for item in self.value)
@@ -41,8 +41,13 @@ class SequenceMatcher(ValueMatcher):
 
 
 class LiteralMatcher(ValueMatcher):
-    def construct(self, flows_from=None):
+    def construct(self):
         return repr(self.value)
+
+
+class ReferenceMatcher(ValueMatcher):
+    def construct(self):
+        return "~" + self.value
 
 
 @dataclass
@@ -108,3 +113,8 @@ def compile_ignore_any(node):
 @compile_node.register(ast.IgnoreAny)
 def compile_ignore_all(node):
     return AllMatcher()
+
+
+@compile_node.register(ast.Reference)
+def compile_reference(node):
+    return ReferenceMatcher(node.id)
