@@ -76,6 +76,9 @@ class Context(ValueMatcher):
         if matcher is not None:
             self.fields[field] = matcher
 
+    def remove(self, field):
+        return self.fields.pop(field, None)
+
     def construct(self):
         source = self.value
         source += "("
@@ -92,19 +95,6 @@ def compile_node(node):
     return context
 
 
-@compile_node.register(ast.expr)
-def compile_expr(node):
-    context = Context.from_node(node)
-
-    # ctx is more about semantics than the structure
-    # of the source code. For nodes like Name/Attribute
-    # we will clear this field in order to match all
-    # similiar structures.
-    context.fields.pop("ctx", None)
-
-    return context
-
-
 @compile_node.register(ast.IgnoreOne)
 def compile_ignore_any(node):
     return AnyMatcher()
@@ -118,3 +108,29 @@ def compile_ignore_all(node):
 @compile_node.register(ast.Reference)
 def compile_reference(node):
     return ReferenceMatcher(node.id)
+
+
+@compile_node.register(ast.expr)
+def compile_expr(node):
+    context = Context.from_node(node)
+
+    # ctx is more about semantics than the structure
+    # of the source code. For nodes like Name/Attribute
+    # we will clear this field in order to match all
+    # similiar structures.
+    context.remove("ctx")
+    context = dispatch_expression(node, context)
+
+    return context
+
+
+@singledispatch
+def dispatch_expression(node, context):
+    return context
+
+
+@dispatch_expression.register(ast.Call)
+def dispatch_call(node, context):
+    if any(isinstance(arg, ast.IgnoreAny) for arg in node.args):
+        context.remove("keywords")
+    return context

@@ -6,10 +6,6 @@ Expr(value=Call(func=Name(id='foo'), args=[], keywords=[]))
 foo(1)
 Expr(value=Call(func=Name(id='foo'), args=[Constant(value=1)], keywords=[]))
 
-# case: call, with any pos args
-foo(***)
-Expr(value=Call(func=Name(id='foo'), args=[*...], keywords=[]))
-
 # case: call, with one key arg
 foo(key=value)
 Expr(value=Call(func=Name(id='foo'), args=[], keywords=[keyword(arg='key', value=Name(id='value'))]))
@@ -25,4 +21,16 @@ Expr(value=Call(func=Name(id='foo'), args=[], keywords=[keyword(arg='key', value
 # case: call, mixed args
 foo(1, 2, foo=3, bar=4)
 Expr(value=Call(func=Name(id='foo'), args=[Constant(value=1), Constant(value=2)], keywords=[keyword(arg='foo', value=Constant(value=3)), keyword(arg='bar', value=Constant(value=4))]))
+
+# case: call, with any pos/keyword args
+foo(***)
+Expr(value=Call(func=Name(id='foo'), args=[*...]))
+
+# case: call to any function, with any pos/keyword args
+...(***)
+Expr(value=Call(func=..., args=[*...]))
+
+# case: call, mixed direct / any matching
+foo(..., bar, ***)
+Expr(value=Call(func=Name(id='foo'), args=[..., Name(id='bar'), *...]))
 
