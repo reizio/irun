@@ -30,6 +30,10 @@ Expr(value=Call(func=Name(id='foo'), args=[*...]))
 ...(***)
 Expr(value=Call(func=..., args=[*...]))
 
+# case: call, greedy pos args, no keyword args
+foo(..., ***, ...)
+Expr(value=Call(func=Name(id='foo'), args=[..., *..., ...], keywords=[]))
+
 # case: call, mixed direct / any matching
 foo(..., bar, ***)
 Expr(value=Call(func=Name(id='foo'), args=[..., Name(id='bar'), *...]))

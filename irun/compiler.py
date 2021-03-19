@@ -131,6 +131,6 @@ def dispatch_expression(node, context):
 
 @dispatch_expression.register(ast.Call)
 def dispatch_call(node, context):
-    if any(isinstance(arg, ast.IgnoreAny) for arg in node.args):
+    if len(node.args) >= 1 and isinstance(node.args[-1], ast.IgnoreAny):
         context.remove("keywords")
     return context
