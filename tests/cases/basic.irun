@@ -12,11 +12,11 @@ Expr(value=Call(func=Name(id='foo'), args=[], keywords=[keyword(arg='key', value
 
 # case: call, with one anon key arg
 foo(...=value)
-Expr(value=Call(func=Name(id='foo'), args=[], keywords=[keyword(arg=..., value=Name(id='value'))]))
+Expr(value=Call(func=Name(id='foo'), args=[], keywords=[keyword(value=Name(id='value'))]))
 
 # case: call, with one named key arg - no value
 foo(key=...)
-Expr(value=Call(func=Name(id='foo'), args=[], keywords=[keyword(arg='key', value=...)]))
+Expr(value=Call(func=Name(id='foo'), args=[], keywords=[keyword(arg='key')]))
 
 # case: call, mixed args
 foo(1, 2, foo=3, bar=4)
@@ -28,7 +28,7 @@ Expr(value=Call(func=Name(id='foo'), args=[*...]))
 
 # case: call to any function, with any pos/keyword args
 ...(***)
-Expr(value=Call(func=..., args=[*...]))
+Expr(value=Call(args=[*...]))
 
 # case: call, greedy pos args, no keyword args
 foo(..., ***, ...)

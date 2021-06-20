@@ -73,7 +73,7 @@ class Context(ValueMatcher):
         elif isinstance(value, ast.AST):
             matcher = compile_node(value)
 
-        if matcher is not None:
+        if matcher is not None and not isinstance(matcher, AnyMatcher):
             self.fields[field] = matcher
 
     def remove(self, field):
@@ -131,19 +131,6 @@ def compile_stmt(node):
     return context
 
 
-@singledispatch
-def dispath_statement(node, context):
-    return context
-
-
-@dispath_statement.register(ast.FunctionDef)
-def dispatch_function_def(node, context):
-    if len(node.decorator_list) == 0:
-        context.remove("decorator_list")
-
-    return context
-
-
 @compile_node.register(ast.arguments)
 def compile_arguments(node):
     context = Context.from_node(node)
@@ -158,6 +145,27 @@ def compile_arguments(node):
         return None
     else:
         return context
+
+
+@singledispatch
+def dispath_statement(node, context):
+    return context
+
+
+@dispath_statement.register(ast.FunctionDef)
+def dispatch_function_def(node, context):
+    if len(node.decorator_list) == 0:
+        context.remove("decorator_list")
+
+    return context
+
+
+@dispath_statement.register(ast.For)
+def dispatch_for(node, context):
+    if len(node.orelse) == 0:
+        context.remove("orelse")
+
+    return context
 
 
 @singledispatch
