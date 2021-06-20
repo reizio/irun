@@ -124,6 +124,42 @@ def compile_expr(node):
     return context
 
 
+@compile_node.register(ast.stmt)
+def compile_stmt(node):
+    context = Context.from_node(node)
+    context = dispath_statement(node, context)
+    return context
+
+
+@singledispatch
+def dispath_statement(node, context):
+    return context
+
+
+@dispath_statement.register(ast.FunctionDef)
+def dispatch_function_def(node, context):
+    if len(node.decorator_list) == 0:
+        context.remove("decorator_list")
+
+    return context
+
+
+@compile_node.register(ast.arguments)
+def compile_arguments(node):
+    context = Context.from_node(node)
+    total_args = (
+        len(node.args)
+        + len(node.kwonlyargs)
+        + len(node.posonlyargs)
+        + int(node.vararg is not None)
+        + int(node.kwarg is not None)
+    )
+    if total_args == 0:
+        return None
+    else:
+        return context
+
+
 @singledispatch
 def dispatch_expression(node, context):
     return context
