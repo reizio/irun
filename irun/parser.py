@@ -13,12 +13,10 @@ class singleton(ast.AST):
     _attributes = ("lineno", "col_offset", "end_lineno", "end_col_offset")
 
 
-class IgnoreOne(singleton):
-    ...
+class IgnoreOne(singleton): ...
 
 
-class IgnoreAny(singleton):
-    ...
+class IgnoreAny(singleton): ...
 
 
 class Reference(ast.expr):

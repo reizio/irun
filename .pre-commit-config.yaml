@@ -1,8 +1,8 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
--   repo: https://github.com/myint/autoflake
-    rev: v1.7.6
+-   repo: https://github.com/PyCQA/autoflake
+    rev: v2.3.1
     hooks:
     -   id: autoflake
         args:
@@ -12,15 +12,15 @@ repos:
           - --expand-star-imports
           - --ignore-init-module-imports
 -   repo: https://github.com/psf/black
-    rev: 22.10.0
+    rev: 24.10.0
     hooks:
     -   id: black
--   repo: https://github.com/pre-commit/mirrors-isort
-    rev: v5.10.1
+-   repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
     hooks:
     -   id: isort
         additional_dependencies: [toml]
 -   repo: https://github.com/asottile/setup-cfg-fmt
-    rev: v2.1.0
+    rev: v2.7.0
     hooks:
     -   id: setup-cfg-fmt
