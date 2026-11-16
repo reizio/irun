@@ -12,8 +12,7 @@ def construct(node):
         return node
 
 
-class Matcher:
-    ...
+class Matcher: ...
 
 
 class AnyMatcher(Matcher):
